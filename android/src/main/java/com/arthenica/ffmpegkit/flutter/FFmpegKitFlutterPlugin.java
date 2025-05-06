@@ -73,7 +73,9 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, EventChannel.StreamHandler {
+import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
+
+public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, EventChannel.StreamHandler, ActivityResultListener {
     public static final String LIBRARY_NAME = "ffmpeg-kit-flutter";
     public static final String PLATFORM_NAME = "android";
 
@@ -186,6 +188,7 @@ public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, Met
         // Clear the reference to avoid memory leaks
         flutterPluginBinding = null;
     }
+
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding activityPluginBinding) {
         activity = activityPluginBinding.getActivity();
@@ -194,7 +197,6 @@ public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, Met
                 flutterPluginBinding.getBinaryMessenger(),
                 flutterPluginBinding.getApplicationContext(),
                 activityPluginBinding.getActivity(),
-                null,
                 activityPluginBinding
         );
     }
@@ -648,8 +650,8 @@ public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, Met
         }
     }
 
-    @SuppressWarnings("deprecation")
-    protected void init(final BinaryMessenger messenger, final Context context, final Activity activity, final ActivityPluginBinding activityBinding) {
+    protected void init(final BinaryMessenger messenger, final Context context, final Activity activity, 
+            final ActivityPluginBinding activityBinding) {
         registerGlobalCallbacks();
 
         if (methodChannel == null) {
@@ -668,9 +670,12 @@ public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, Met
 
         this.context = context;
         this.activity = activity;
+        this.activityPluginBinding = activityBinding;
 
         // Remove V1 embedding check, since V2 is being used.
-        activityBinding.addActivityResultListener(this);
+        if (activityBinding != null) {
+            activityBinding.addActivityResultListener(this);
+        }
 
         Log.d(LIBRARY_NAME, String.format("FFmpegKitFlutterPlugin %s initialised with context %s and activity %s.", this, context, activity));
     }
